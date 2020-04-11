@@ -1,0 +1,374 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Document</title>
+  <script src="node_modules\nesnes\dist\nesnes.js"></script>
+  <style>
+    body {
+      background-color: #000;
+      margin: 0;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      position: absolute;
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+      font-family: verdana;
+    }
+
+    button {
+      font-weight: bold;
+    }
+
+    .hide {
+      display: none !important;
+    }
+
+    #game {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      position: absolute;
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+    }
+
+    #droparea {
+      border: 2px solid orange;
+      position: absolute;
+      height: 90%;
+      width: 90%;
+      color: orange;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+
+    #canvas {
+      border: 2px solid orange;
+      position: absolute;
+      height: 90%;
+      width: 90%;
+      color: orange;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+
+    #menu {
+      color: black;
+      background: teal;
+      position: fixed;
+      top: 10px;
+      display: flex;
+      flex-direction: column;
+      width: 50%;
+      align-items: center;
+      box-sizing: border-box;
+      padding: 2em;
+    }
+
+    #menu div {
+      width: 80%;
+    }
+
+    #menu button {
+      min-width: 100px;
+      width: 100%;
+    }
+
+    #menu input {
+      width: 4em;
+    }
+  </style>
+</head>
+
+<body>
+  <div id="game">
+    <canvas style=" position: absolute; height: 100%;" id=" nesnes" width="256" height="224">
+      Sorry, your browser doesn't support NESNES!
+    </canvas>
+  </div>
+  <div id="droparea">
+    <p>Drop game here :)</p>
+    <p>Press Esc for Options</p>
+  </div>
+
+  <div id="menu" class="">
+    <div id="controls">
+      <h1>Controls</h1>
+      <table>
+        <tr>
+          <th>Button</th>
+          <th>Key</th>
+        </tr>
+        <tr>
+          <td>a</td>
+          <td><button data-button="a" data-key="y">y</button></td>
+        </tr>
+        <tr>
+          <td>b</td>
+          <td><button data-button="b" data-key="x">x</button></td>
+        </tr>
+        <tr>
+          <td>select</td>
+          <td><button data-button="select" data-key="shift">shift</button></td>
+        </tr>
+        <tr>
+          <td>start</td>
+          <td><button data-button="start" data-key="return">return</button></td>
+        </tr>
+        <tr>
+          <td>up</td>
+          <td><button data-button="up" data-key="up">up</button></td>
+        </tr>
+        <tr>
+          <td>down</td>
+          <td><button data-button="down" data-key="down">down</button></td>
+        </tr>
+        <tr>
+          <td>left</td>
+          <td><button data-button="left" data-key="left">left</button></td>
+        </tr>
+        <tr>
+          <td>righ</td>
+          <td><button data-button="right" data-key="right">right</button></td>
+        </tr>
+      </table>
+    </div>
+
+    <div>
+      <h1>fun stuff</h1>
+      <p>return for any key</p>
+      <table>
+        <tr>
+          <th>Thing</th>
+          <th>Key</th>
+          <th>*</th>
+        </tr>
+        <tr>
+          <td><label>scale</label></td>
+          <td><button data-thing="scale" data-key-code="88">x</button></td>
+          <td><input type="number" value="1" steps="0.1"></td>
+        </tr>
+        <tr>
+          <td><label>rotateleft</label></td>
+          <td><button data-thing="rotateleft"> - </button></td>
+          <td><input type="number" value="1" steps="0.1"></td>
+        </tr>
+        <tr>
+          <td><label>rotateright</label></td>
+          <td><button data-thing="rotateright" data-key-code="39">right</button></td>
+          <td><input type="number" value="1" steps="0.1"></td>
+        </tr>
+        <tr>
+          <td><label>blur</label></td>
+          <td><button data-thing="blur" data-key-code="89">y</button></td>
+          <td><input type="number" value="1" steps="0.1"></td>
+        </tr>
+        <tr>
+          <td><label>hue</label></td>
+          <td><button data-thing="hue" data-key-code="13">return</button></td>
+          <td><input type="number" value="1" steps="0.1"></td>
+        </tr>
+        <tr>
+          <td><label>shrink</label></td>
+          <td><button data-thing="shrink" data-key-code="37">left</button></td>
+          <td><input type="number" value="1" steps="0.1"></td>
+        </tr>
+        <tr>
+          <td><label>grow</label></td>
+          <td><button data-thing="grow"> - </button></td>
+          <td><input type="number" value="1" steps="0.1"></td>
+        </tr>
+      </table>
+    </div>
+  </div>
+
+  <script>
+    const $ = (e) => document.querySelector(e);
+    const $$ = (e) => document.querySelectorAll(e);
+    const canvas = $('canvas');
+    const droparea = $('#droparea');
+    const emulator = new NesNes(canvas);
+    const things = {
+      scale: 100,
+      rotate: 0,
+      blur: 0,
+      hue: 0,
+      canvaswidth: 256,
+    }
+
+
+    const preventDefaults = (e) => {
+      e.preventDefault()
+      e.stopPropagation()
+    }
+
+    const getKey = (keyCode) => {
+      const keyCodeMap = {
+        8: "backspace",
+        9: "tab",
+        13: "return",
+        16: "shift",
+        17: "ctrl",
+        18: "alt",
+        20: "capslock",
+        32: "space",
+        37: "left",
+        38: "up",
+        39: "right",
+        40: "down",
+      };
+      let key;
+      if (keyCode in keyCodeMap) {
+        key = keyCodeMap[keyCode];
+      } else {
+        key = String.fromCharCode(keyCode);
+      }
+      return key;
+    }
+
+
+    const applyThings = (e) => {
+      console.log(e);
+      if (e.code === 'Escape') {
+        menu.toggle();
+      }
+
+      if (e.keyCode == $('[data-thing="scale"]').dataset.keyCode || $('[data-thing="scale"]').dataset.keyCode == 13) {
+        console.log('scale triggered');
+        const multi = $('[data-thing="scale"]').parentElement.parentElement.querySelector('input').value;
+        things.scale = things.scale * 0.995 * multi;
+        document.querySelector('canvas').style.height = `${things.scale}%`;
+      }
+
+      if (e.keyCode == $('[data-thing="rotateright"]').dataset.keyCode || $('[data-thing="rotateright"]').dataset.keyCode == 13) { // take that from save
+        console.log('rotateright triggered');
+        const multi = $('[data-thing="rotateright"]').parentElement.parentElement.querySelector('input').value;
+        things.rotate = things.rotate + 0.2 * multi;
+        $('canvas').style.transform = `rotate(${things.rotate}deg)`;
+      }
+
+      if (e.keyCode == $('[data-thing="rotateleft"]').dataset.keyCode || $('[data-thing="rotateleft"]').dataset.keyCode == 13) { // take that from save
+        console.log('rotateleft triggered');
+        const multi = $('[data-thing="rotateleft"]').parentElement.parentElement.querySelector('input').value;
+        things.rotate = things.rotate - 0.2 * multi;
+        $('canvas').style.transform = `rotate(${things.rotate}deg)`;
+      }
+
+      if (e.keyCode == $('[data-thing="blur"]').dataset.keyCode || $('[data-thing="blur"]').dataset.keyCode == 13) {
+        console.log('blur triggered');
+        const multi = $('[data-thing="blur"]').parentElement.parentElement.querySelector('input').value;
+        things.blur = things.blur + 0.1 * multi;
+        $('canvas').style.filter = `hue-rotate(${things.hue}deg) blur(${things.blur}px)`;
+      }
+
+      if (e.keyCode == $('[data-thing="shrink"]').dataset.keyCode || $('[data-thing="shrink"]').dataset.keyCode == 13) {
+        console.log('shrink triggered');
+        const multi = $('[data-thing="shrink"]').parentElement.parentElement.querySelector('input').value;
+        things.canvaswidth = things.canvaswidth === 0 ? 0 : things.canvaswidth - 0.1 * multi;
+        $('canvas').width = things.canvaswidth;
+      }
+
+      if (e.keyCode == $('[data-thing="grow"]').dataset.keyCode || $('[data-thing="grow"]').dataset.keyCode == 13) {
+        console.log('grow triggered');
+        const multi = $('[data-thing="grow"]').parentElement.parentElement.querySelector('input').value;
+        things.canvaswidth = things.canvaswidth === 256 ? 0 : things.canvaswidth + 0.1 * multi;
+        $('canvas').width = things.canvaswidth;
+      }
+
+      if (e.keyCode == $('[data-thing="hue"]').dataset.keyCode || $('[data-thing="hue"]').dataset.keyCode == 13) {
+        console.log('hue triggered');
+        const multi = $('[data-thing="hue"]').parentElement.parentElement.querySelector('input').value;
+        things.hue = things.hue + 1 * multi;
+        $('canvas').style.filter = `hue-rotate(${things.hue}deg) blur(${things.blur}px)`;
+      }
+
+
+    };
+
+    const menu = {
+      toggle() {
+        $('#menu').classList.toggle('hide');
+      },
+      save() {
+        console.log('saved');
+        emulator.input.configure(0, "keyboard", {
+          [$('[data-button="a"]').dataset.key]: "a",
+          [$('[data-button="b"]').dataset.key]: "b",
+          [$('[data-button="select"]').dataset.key]: "select",
+          [$('[data-button="start"]').dataset.key]: "start",
+          [$('[data-button="up"]').dataset.key]: "up",
+          [$('[data-button="down"]').dataset.key]: "down",
+          [$('[data-button="left"]').dataset.key]: "left",
+          [$('[data-button="right"]').dataset.key]: "right"
+        })
+        document.removeEventListener('keydown', applyThings);
+        document.addEventListener('keydown', applyThings);
+      }
+    }
+
+
+
+    const dropEvent = (e) => {
+      preventDefaults(e);
+      droparea.style.display = 'none';
+      const reader = new FileReader();
+
+      reader.addEventListener("load", () => {
+        emulator.load(reader.result, true);
+      }, false);
+
+      reader.readAsDataURL(e.dataTransfer.files[0]);
+    }
+
+    ['dragenter', 'dragover', 'dragleave'].forEach(eventName => {
+      canvas.addEventListener(eventName, preventDefaults, false)
+      droparea.addEventListener(eventName, preventDefaults, false)
+    });
+
+    canvas.addEventListener('drop', dropEvent, false);
+    droparea.addEventListener('drop', dropEvent, false);
+
+    $('input').addEventListener('change', () => {
+      menu.save();
+    })
+
+    $$('#menu button').forEach(element => {
+      element.addEventListener('click', (e) => {
+        event.stopImmediatePropagation()
+        if ([...$$('#menu #controls button')].map(e => e.innerText).includes('Press Key')) return;
+
+        const button = e.target
+        const oldKey = button.dataset.key;
+        button.innerText = 'Press Key';
+
+        const setKey = (e) => {
+          console.log(e.keyCode);
+          const key = getKey(e.keyCode);
+          button.innerText = key;
+          button.dataset.key = key;
+          button.dataset.keyCode = e.keyCode;
+          document.removeEventListener('click', cancelKey);
+          menu.save()
+        }
+        const cancelKey = (e) => {
+          button.innerText = oldKey
+          document.removeEventListener('keydown', setKey);
+        }
+        document.addEventListener('keydown', setKey, { once: true });
+        document.addEventListener('click', cancelKey, { once: true });
+      });
+    });
+
+    menu.save(); //save on load anyways, to apply initial settings
+  </script>
+</body>
+
+</html>
