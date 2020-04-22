@@ -210,7 +210,6 @@
       canvaswidth: 256,
     }
 
-
     const preventDefaults = (e) => {
       e.preventDefault()
       e.stopPropagation()
@@ -239,7 +238,6 @@
       }
       return key;
     }
-
 
     const applyThings = (e) => {
       console.log(e);
@@ -295,8 +293,6 @@
         things.hue = things.hue + 1 * multi;
         $('canvas').style.filter = `hue-rotate(${things.hue}deg) blur(${things.blur}px)`;
       }
-
-
     };
 
     const menu = {
@@ -319,8 +315,6 @@
         document.addEventListener('keydown', applyThings);
       }
     }
-
-
 
     const dropEvent = (e) => {
       preventDefaults(e);
